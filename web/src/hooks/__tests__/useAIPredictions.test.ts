@@ -437,26 +437,15 @@ describe('useAIPredictions', () => {
     mockGetDemoMode.mockReturnValue(true)
     const { result } = renderHook(() => useAIPredictions())
 
-    let analyzePromise: Promise<void>
+    // Start analyze — don't await, let timers drive it
+    let done = false
     act(() => {
-      analyzePromise = result.current.analyze()
+      result.current.analyze().then(() => { done = true })
     })
 
-    // Advance timer for the UI_FEEDBACK_TIMEOUT_MS (500ms in mock)
-    const UI_FEEDBACK_DELAY_MS = 500
+    // Advance past all internal delays (triggerAnalysis demo delay + RETRY_DELAY_MS)
     await act(async () => {
-      vi.advanceTimersByTime(UI_FEEDBACK_DELAY_MS)
-    })
-
-    // Advance timer for RETRY_DELAY_MS (100ms in mock)
-    const RETRY_DELAY = 100
-    await act(async () => {
-      vi.advanceTimersByTime(RETRY_DELAY)
-    })
-
-    // Settle
-    await act(async () => {
-      vi.runAllTimers()
+      await vi.advanceTimersByTimeAsync(2000)
     })
 
     // setActiveTokenCategory should have been called with 'predictions' and then null
@@ -489,20 +478,15 @@ describe('useAIPredictions', () => {
     const { result } = renderHook(() => useAIPredictions())
 
     await act(async () => {
-      vi.runAllTimers()
+      await vi.advanceTimersByTimeAsync(1000)
     })
 
-    let analyzePromise: Promise<void>
     act(() => {
-      analyzePromise = result.current.analyze(['claude'])
+      result.current.analyze(['claude'])
     })
 
     await act(async () => {
-      vi.advanceTimersByTime(200)
-    })
-
-    await act(async () => {
-      vi.runAllTimers()
+      await vi.advanceTimersByTimeAsync(2000)
     })
 
     // Should have called fetch with /predictions/analyze POST
@@ -519,7 +503,7 @@ describe('useAIPredictions', () => {
     mockGetDemoMode.mockReturnValue(false)
     mockIsAgentUnavailable.mockReturnValue(false)
 
-    globalThis.fetch = vi.fn().mockImplementation((url: string, opts?: RequestInit) => {
+    globalThis.fetch = vi.fn().mockImplementation((url: string) => {
       if (typeof url === 'string' && url.includes('/predictions/analyze')) {
         return Promise.resolve({ ok: false, status: 500 })
       }
@@ -538,17 +522,16 @@ describe('useAIPredictions', () => {
     const { result } = renderHook(() => useAIPredictions())
 
     await act(async () => {
-      vi.runAllTimers()
+      await vi.advanceTimersByTimeAsync(1000)
     })
 
     // Should not throw
-    await act(async () => {
+    act(() => {
       result.current.analyze()
-      vi.runAllTimers()
     })
 
     await act(async () => {
-      vi.runAllTimers()
+      await vi.advanceTimersByTimeAsync(2000)
     })
   })
 
@@ -561,17 +544,16 @@ describe('useAIPredictions', () => {
     const { result } = renderHook(() => useAIPredictions())
 
     await act(async () => {
-      vi.runAllTimers()
+      await vi.advanceTimersByTimeAsync(1000)
     })
 
     // Should not throw
-    await act(async () => {
+    act(() => {
       result.current.analyze()
-      vi.runAllTimers()
     })
 
     await act(async () => {
-      vi.runAllTimers()
+      await vi.advanceTimersByTimeAsync(2000)
     })
   })
 
