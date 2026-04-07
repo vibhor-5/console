@@ -144,6 +144,14 @@ func YouTubePlaylistHandler(c *fiber.Ctx) error {
 	})
 }
 
+// youtubeVideoIDLen is the standard length of a YouTube video ID (11 characters).
+const youtubeVideoIDLen = 11
+
+// youtubeDefaultThumbnailMaxBytes is the maximum size of YouTube's default
+// placeholder thumbnail returned for non-existent video IDs. Real thumbnails
+// are typically larger than this.
+const youtubeDefaultThumbnailMaxBytes = 1200
+
 // YouTubeThumbnailProxy proxies a YouTube video thumbnail image through
 // the backend, avoiding MSW/CORS issues in demo mode.
 // Route: GET /api/youtube/thumbnail/:id
@@ -153,25 +161,39 @@ func YouTubeThumbnailProxy(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "missing video id"})
 	}
 
-	// Only allow alphanumeric, hyphens, and underscores (YouTube video IDs)
+	// YouTube video IDs are exactly 11 characters: [A-Za-z0-9_-]
+	if len(videoID) != youtubeVideoIDLen {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid video id: must be 11 characters"})
+	}
 	for _, ch := range videoID {
 		if !((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch == '-' || ch == '_') {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid video id"})
 		}
 	}
 
-	url := fmt.Sprintf("https://img.youtube.com/vi/%s/mqdefault.jpg", videoID)
+	thumbURL := fmt.Sprintf("https://img.youtube.com/vi/%s/mqdefault.jpg", videoID)
 
 	client := &http.Client{Timeout: playlistFetchTimeout}
-	resp, err := client.Get(url)
+	resp, err := client.Get(thumbURL)
 	if err != nil {
 		return c.Status(fiber.StatusBadGateway).SendString("failed to fetch thumbnail")
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusOK {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "thumbnail not found"})
+	}
+
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return c.Status(fiber.StatusBadGateway).SendString("failed to read thumbnail")
+	}
+
+	// YouTube returns a tiny default placeholder image for non-existent video IDs
+	// instead of a 404. Detect this by checking the response size — real thumbnails
+	// are significantly larger than the ~1KB placeholder.
+	if len(body) < youtubeDefaultThumbnailMaxBytes {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "video not found"})
 	}
 
 	c.Set("Content-Type", "image/jpeg")

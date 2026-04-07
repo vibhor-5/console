@@ -57,15 +57,30 @@ func PingHandler(c *fiber.Ctx) error {
 		rawURL = "https://" + rawURL
 	}
 
-	// Validate the URL to prevent SSRF against internal services
+	// Validate the URL to prevent SSRF and reject malformed input
 	parsed, err := url.Parse(rawURL)
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "invalid url"})
 	}
 
+	// Reject URLs without a valid scheme
+	if parsed.Scheme != "http" && parsed.Scheme != "https" {
+		return c.Status(400).JSON(fiber.Map{"error": "invalid url: scheme must be http or https"})
+	}
+
 	host := parsed.Hostname()
 	if host == "" {
 		return c.Status(400).JSON(fiber.Map{"error": "invalid url: no host"})
+	}
+
+	// Reject URLs with userinfo (user:pass@host) — potential credential leak
+	if parsed.User != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "invalid url: userinfo not allowed"})
+	}
+
+	// Reject hosts that are bare IPs with invalid formats
+	if net.ParseIP(host) == nil && !strings.Contains(host, ".") && !strings.Contains(host, ":") {
+		return c.Status(400).JSON(fiber.Map{"error": "invalid url: host must be a valid domain or IP"})
 	}
 
 	// Block requests to private/internal IPs to prevent SSRF
@@ -85,17 +100,22 @@ func PingHandler(c *fiber.Ctx) error {
 	latencyMs := time.Since(start).Milliseconds()
 
 	if err != nil {
-		// Distinguish timeout from other errors
+		// Distinguish timeout from other errors and return appropriate HTTP status.
+		// Sanitize error messages to avoid exposing internal network details
+		// (e.g. raw "dial tcp" errors with internal IPs).
 		status := "error"
-		errMsg := err.Error()
+		sanitizedErr := "target unreachable"
+		httpStatus := fiber.StatusBadGateway
 		if isTimeoutError(err) {
 			status = "timeout"
+			sanitizedErr = "request timed out"
+			httpStatus = fiber.StatusGatewayTimeout
 		}
-		return c.JSON(fiber.Map{
+		return c.Status(httpStatus).JSON(fiber.Map{
 			"url":       rawURL,
 			"status":    status,
 			"latencyMs": latencyMs,
-			"error":     errMsg,
+			"error":     sanitizedErr,
 		})
 	}
 	defer resp.Body.Close()

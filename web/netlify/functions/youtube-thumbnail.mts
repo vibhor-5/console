@@ -5,11 +5,25 @@
  * MSW service worker blocking external image requests in demo mode.
  */
 
+/** Standard YouTube video ID length */
+const YOUTUBE_VIDEO_ID_LEN = 11;
+
+/**
+ * Maximum size (bytes) of YouTube's default placeholder thumbnail returned
+ * for non-existent video IDs. Real thumbnails are significantly larger.
+ */
+const DEFAULT_THUMBNAIL_MAX_BYTES = 1200;
+
 export default async (req: Request) => {
   const url = new URL(req.url);
   const videoId = url.pathname.split("/").pop() || "";
 
-  if (!videoId || !/^[\w-]+$/.test(videoId)) {
+  // YouTube video IDs are exactly 11 characters: [A-Za-z0-9_-]
+  if (
+    !videoId ||
+    videoId.length !== YOUTUBE_VIDEO_ID_LEN ||
+    !/^[\w-]+$/.test(videoId)
+  ) {
     return new Response("invalid video id", { status: 400 });
   }
 
@@ -23,6 +37,12 @@ export default async (req: Request) => {
     }
 
     const body = await resp.arrayBuffer();
+
+    // YouTube returns a tiny default placeholder for non-existent video IDs
+    // instead of a 404. Detect by size — real thumbnails are much larger.
+    if (body.byteLength < DEFAULT_THUMBNAIL_MAX_BYTES) {
+      return new Response("video not found", { status: 404 });
+    }
 
     return new Response(body, {
       status: 200,

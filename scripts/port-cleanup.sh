@@ -34,11 +34,13 @@ kill_project_port() {
     for pid in $pids; do
         local cmd
         cmd=$(ps -p "$pid" -o args= 2>/dev/null || true)
-        # Match project processes by script directory, Go binary path, or agent name
+        # Match project processes by script directory, Go binary path, agent name,
+        # or Go temp binaries (go run compiles to /tmp paths like /var/folders/.../exe/console)
         if echo "$cmd" | grep -qF "${SCRIPT_DIR:-__no_match__}" \
            || echo "$cmd" | grep -q "cmd/console" \
            || echo "$cmd" | grep -q "kc-agent" \
-           || echo "$cmd" | grep -q "kubestellar.*console"; then
+           || echo "$cmd" | grep -q "kubestellar.*console" \
+           || echo "$cmd" | grep -q "/exe/console"; then
             to_kill+=("$pid")
             echo -e "${YELLOW:-}Stopping stale project process on port ${port} (PID ${pid})...${NC:-}"
             kill -TERM "$pid" 2>/dev/null || true
@@ -98,11 +100,12 @@ verify_port_free() {
     for pid in $pids; do
         local cmd
         cmd=$(ps -p "$pid" -o args= 2>/dev/null || true)
-        # Check if this is a project process
+        # Check if this is a project process (including Go temp binaries from go run)
         if echo "$cmd" | grep -qF "${SCRIPT_DIR:-__no_match__}" \
            || echo "$cmd" | grep -q "cmd/console" \
            || echo "$cmd" | grep -q "kc-agent" \
-           || echo "$cmd" | grep -q "kubestellar.*console"; then
+           || echo "$cmd" | grep -q "kubestellar.*console" \
+           || echo "$cmd" | grep -q "/exe/console"; then
             echo -e "${RED:-}Error: Port ${port} still held by project process (PID ${pid}: ${cmd:-unknown})${NC:-}"
             echo -e "${RED:-}  kill ${pid}${NC:-}"
             project_blocking=true

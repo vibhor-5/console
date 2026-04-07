@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime/debug"
 	"sort"
@@ -434,8 +435,30 @@ func (s *Server) setupRoutes() {
 			return c.JSON(fiber.Map{"status": "shutting_down", "version": Version})
 		}
 		inCluster := s.k8sClient != nil && s.k8sClient.IsInCluster()
+
+		// Determine cluster reachability status. If we have a k8s client,
+		// check cached health data — if no clusters are reachable, report
+		// "degraded" instead of "ok" so monitoring can detect the problem.
+		healthStatus := "ok"
+		if s.k8sClient != nil {
+			cachedHealth := s.k8sClient.GetCachedHealth()
+			if len(cachedHealth) > 0 {
+				anyReachable := false
+				for _, h := range cachedHealth {
+					if h != nil && h.Reachable {
+						anyReachable = true
+						break
+					}
+				}
+				if !anyReachable {
+					healthStatus = "degraded"
+				}
+			}
+			// If no cached health data yet, keep "ok" — health poller hasn't run yet
+		}
+
 		resp := fiber.Map{
-			"status":           "ok",
+			"status":           healthStatus,
 			"version":          Version,
 			"oauth_configured": s.config.GitHubClientID != "",
 			"in_cluster":       inCluster,
@@ -480,14 +503,29 @@ func (s *Server) setupRoutes() {
 		return c.JSON(resp)
 	})
 
-	// Version endpoint — lightweight, returns only build metadata
+	// Version endpoint — lightweight, returns only build metadata.
+	// In dev mode (go run), VCS info from debug.ReadBuildInfo() may be empty,
+	// so we fall back to git commands for commit and time.
 	s.app.Get("/api/version", func(c *fiber.Ctx) error {
+		gitCommit := buildInfo.VCSRevision
+		gitTime := buildInfo.VCSTime
+		gitDirty := buildInfo.VCSModified == "true"
+
+		// Fallback: if VCS revision is empty (e.g. go run without VCS info),
+		// try to read from git directly
+		if gitCommit == "" {
+			gitCommit = gitFallbackRevision()
+		}
+		if gitTime == "" {
+			gitTime = gitFallbackTime()
+		}
+
 		return c.JSON(fiber.Map{
 			"version":    Version,
 			"go_version": buildInfo.GoVersion,
-			"git_commit": buildInfo.VCSRevision,
-			"git_time":   buildInfo.VCSTime,
-			"git_dirty":  buildInfo.VCSModified == "true",
+			"git_commit": gitCommit,
+			"git_time":   gitTime,
+			"git_dirty":  gitDirty,
 		})
 	})
 
@@ -1356,6 +1394,27 @@ func generateDevSecret() string {
 		return fmt.Sprintf("dev-fallback-%d", b)
 	}
 	return hex.EncodeToString(b)
+}
+
+// gitFallbackRevision returns the current git HEAD SHA by shelling out to git.
+// Used as a fallback when debug.ReadBuildInfo() doesn't include VCS metadata
+// (e.g. when running with `go run` outside a module-aware build).
+func gitFallbackRevision() string {
+	out, err := exec.Command("git", "rev-parse", "HEAD").Output()
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(out))
+}
+
+// gitFallbackTime returns the commit time of HEAD by shelling out to git.
+// Used as a fallback when debug.ReadBuildInfo() doesn't include VCS metadata.
+func gitFallbackTime() string {
+	out, err := exec.Command("git", "log", "-1", "--format=%cI").Output()
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(out))
 }
 
 // detectInstallMethod returns how the console was installed: dev, binary, or helm.

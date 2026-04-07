@@ -89,13 +89,29 @@ export default async (request: Request): Promise<Response> => {
 
     const ghEntries = (await resp.json()) as GitHubEntry[];
 
+    /** Files to hide from the browser — infrastructure/metadata, not missions */
+    const HIDDEN_FILES = new Set([".gitkeep", "index.json", "search-state.json"]);
+    /** Directories to hide from the browser */
+    const HIDDEN_DIRS = new Set([".github"]);
+
     // Transform GitHub's "dir" type to "directory" (frontend expects this)
-    const entries = ghEntries.map((e) => ({
-      name: e.name,
-      path: e.path,
-      type: e.type === "dir" ? "directory" : e.type,
-      size: e.size || 0,
-    }));
+    // and filter out internal/infrastructure entries
+    const entries = ghEntries
+      .map((e) => ({
+        name: e.name,
+        path: e.path,
+        type: e.type === "dir" ? "directory" : e.type,
+        size: e.size || 0,
+      }))
+      .filter((e) => {
+        // Skip dotfiles/dotdirs
+        if (e.name.startsWith(".")) return false;
+        // Skip known infrastructure files
+        if (e.type === "file" && HIDDEN_FILES.has(e.name)) return false;
+        // Skip known infrastructure directories
+        if (e.type === "directory" && HIDDEN_DIRS.has(e.name)) return false;
+        return true;
+      });
 
     const body = JSON.stringify(entries);
 
