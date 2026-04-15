@@ -672,6 +672,7 @@ interface ExpandedNodeDetails {
 }
 
 function ExpandModal({ node, onClose }: { node: ExpandedNodeDetails | null; onClose: () => void }) {
+  const { t } = useTranslation()
   if (!node) return null
   const titleId = `drasi-expand-title-${node.id}`
   return (
@@ -687,13 +688,13 @@ function ExpandModal({ node, onClose }: { node: ExpandedNodeDetails | null; onCl
             {node.type} · {node.kind}
           </div>
         </div>
-        <button type="button" onClick={onClose} className="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-800 text-slate-400" aria-label="Close">
+        <button type="button" onClick={onClose} className="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-800 text-slate-400" aria-label={t('actions.close')}>
           <X className="w-4 h-4" />
         </button>
       </div>
       <div className="space-y-1.5 text-xs">
         <div className="flex justify-between text-slate-300">
-          <span className="text-muted-foreground">ID:</span>
+          <span className="text-muted-foreground">{t('drasi.idLabel')}</span>
           <span className="font-mono">{node.id}</span>
         </div>
         {node.extra && Object.entries(node.extra).map(([k, v]) => (
@@ -744,16 +745,16 @@ function SourceConfigModal({
     >
       <div className="flex items-start justify-between mb-3">
         <div>
-          <div id={titleId} className="text-white font-semibold text-sm">Configure Source</div>
-          <div className="text-muted-foreground text-xs uppercase tracking-wider mt-0.5">Source · {source.kind}</div>
+          <div id={titleId} className="text-white font-semibold text-sm">{t('drasi.configureSource')}</div>
+          <div className="text-muted-foreground text-xs uppercase tracking-wider mt-0.5">{t('drasi.sourceKindLabel', { kind: source.kind })}</div>
         </div>
-        <button type="button" onClick={onClose} className="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-800 text-slate-400" aria-label="Close">
+        <button type="button" onClick={onClose} className="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-800 text-slate-400" aria-label={t('actions.close')}>
           <X className="w-4 h-4" />
         </button>
       </div>
       <div className="space-y-3">
         <div>
-          <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Name</label>
+          <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1">{t('drasi.nameLabel')}</label>
           <input
             type="text"
             value={name}
@@ -762,7 +763,7 @@ function SourceConfigModal({
           />
         </div>
         <div>
-          <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Source Type</label>
+          <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1">{t('drasi.sourceTypeLabel')}</label>
           <select
             value={kind}
             onChange={e => setKind(e.target.value as SourceKind)}
@@ -803,16 +804,16 @@ function QueryConfigModal({
     >
       <div className="flex items-start justify-between mb-3">
         <div>
-          <div id={titleId} className="text-white font-semibold text-sm">Configure Continuous Query</div>
-          <div className="text-muted-foreground text-xs uppercase tracking-wider mt-0.5">Query · {query.language}</div>
+          <div id={titleId} className="text-white font-semibold text-sm">{t('drasi.configureContinuousQuery')}</div>
+          <div className="text-muted-foreground text-xs uppercase tracking-wider mt-0.5">{t('drasi.queryLanguageLabel', { language: query.language })}</div>
         </div>
-        <button type="button" onClick={onClose} className="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-800 text-slate-400" aria-label="Close">
+        <button type="button" onClick={onClose} className="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-800 text-slate-400" aria-label={t('actions.close')}>
           <X className="w-4 h-4" />
         </button>
       </div>
       <div className="space-y-3">
         <div>
-          <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Name</label>
+          <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1">{t('drasi.nameLabel')}</label>
           <input
             type="text"
             value={name}
@@ -821,7 +822,7 @@ function QueryConfigModal({
           />
         </div>
         <div>
-          <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Query Type</label>
+          <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1">{t('drasi.queryTypeLabel')}</label>
           <select
             value={language}
             onChange={e => setLanguage(e.target.value)}
@@ -831,13 +832,13 @@ function QueryConfigModal({
           </select>
         </div>
         <div>
-          <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Query</label>
+          <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1">{t('drasi.queryLabel')}</label>
           <textarea
             value={queryText}
             onChange={e => setQueryText(e.target.value)}
             rows={5}
             className="w-full px-2 py-1.5 text-xs font-mono bg-slate-950 border border-slate-700 rounded text-white focus:border-cyan-500 focus:outline-none resize-none"
-            placeholder="MATCH (n) RETURN n"
+            placeholder={t('drasi.queryPlaceholder')}
           />
         </div>
       </div>
