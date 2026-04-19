@@ -3,6 +3,8 @@ package handlers
 import (
 	"encoding/json"
 	"log/slog"
+	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -10,6 +12,17 @@ import (
 	"github.com/google/uuid"
 	"github.com/kubestellar/console/pkg/api/middleware"
 )
+
+// getEnvInt reads an integer from the environment, falling back to defaultVal.
+// Invalid values (non-numeric) return the default.
+func getEnvInt(key string, defaultVal int) int {
+	if v := os.Getenv(key); v != "" {
+		if n, err := strconv.Atoi(v); err == nil {
+			return n
+		}
+	}
+	return defaultVal
+}
 
 const (
 	// wsInactiveCutoff is how long a client can be idle before being considered inactive.
@@ -28,6 +41,12 @@ const (
 	maxDemoSessions = 500
 	// maxSessionIDLen is the maximum allowed length for a demo session ID.
 	maxSessionIDLen = 128
+	// defaultMaxWebSocketConnections caps total concurrent WebSocket connections to prevent
+	// resource exhaustion (file descriptors, memory, goroutines). Each connection
+	// consumes ~1 file descriptor, ~5KB memory, and 2 goroutines. The default of 1000
+	// is a safe upper bound for a single instance; scale horizontally for higher capacity.
+	// Configurable via WS_MAX_CONNECTIONS environment variable.
+	defaultMaxWebSocketConnections = 1000
 )
 
 // Message represents a WebSocket message
@@ -79,6 +98,7 @@ type Hub struct {
 	configMu  sync.RWMutex
 	jwtSecret string // JWT secret for WebSocket auth (guarded by configMu)
 	devMode   bool   // when true, demo-token bypass is allowed (guarded by configMu)
+	maxConnections int // Maximum allowed concurrent WebSocket connections
 }
 
 // Client.closeOnce ensures the underlying WebSocket connection is closed
@@ -94,6 +114,16 @@ type broadcastMessage struct {
 
 // NewHub creates a new Hub
 func NewHub() *Hub {
+	maxConnections := getEnvInt("WS_MAX_CONNECTIONS", defaultMaxWebSocketConnections)
+
+	// Validate and clamp maxConnections to prevent zero or negative values
+	if maxConnections < 1 {
+		slog.Warn("[WebSocket] WS_MAX_CONNECTIONS must be >= 1, using default",
+			"value", maxConnections, "default", defaultMaxWebSocketConnections)
+		maxConnections = defaultMaxWebSocketConnections
+	}
+	slog.Info("[WebSocket] connection limit configured", "max", maxConnections)
+
 	return &Hub{
 		clients:      make(map[*Client]bool),
 		userIndex:    make(map[uuid.UUID][]*Client),
@@ -102,6 +132,7 @@ func NewHub() *Hub {
 		register:     make(chan *Client),
 		unregister:   make(chan *Client),
 		done:         make(chan struct{}),
+		maxConnections: maxConnections,
 	}
 }
 
@@ -472,6 +503,17 @@ func (h *Hub) HandleConnection(conn *websocket.Conn) {
 	// Send authentication success message
 	if err := conn.WriteJSON(Message{Type: "authenticated", Data: map[string]string{"status": "connected"}}); err != nil {
 		slog.Error("[WebSocket] failed to send auth success", "error", err)
+		conn.Close()
+		return
+	}
+
+	// Check connection limit before registration to prevent resource exhaustion
+	if h.GetTotalConnectionsCount() >= h.maxConnections {
+		slog.Warn("[WebSocket] SECURITY: rejected connection - limit reached",
+			"user", userID, "current", h.GetTotalConnectionsCount(), "limit", h.maxConnections)
+		if err := conn.WriteJSON(Message{Type: "error", Data: map[string]string{"message": "server at capacity"}}); err != nil {
+			slog.Error("[WebSocket] failed to send limit error", "error", err)
+		}
 		conn.Close()
 		return
 	}
