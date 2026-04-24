@@ -87,6 +87,7 @@ const MARKETPLACE_TO_CARD_TYPE: Record<string, string> = {
   'cncf-crio': 'crio_status',
   'cncf-backstage': 'backstage_status',
   'cncf-containerd': 'containerd_status',
+  'cncf-cortex': 'cortex_status',
   'cncf-dragonfly': 'dragonfly_status',
   'cncf-cloudevents': 'cloudevents_status',
   'cncf-crossplane': 'crossplane_managed_resources',

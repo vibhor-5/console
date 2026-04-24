@@ -65,6 +65,7 @@ import { fluxStatusConfig } from './flux-status'
 import { backstageStatusConfig } from './backstage-status'
 import { contourStatusConfig } from './contour-status'
 import { containerdStatusConfig } from './containerd-status'
+import { cortexStatusConfig } from './cortex-status'
 import { daprStatusConfig } from './dapr-status'
 import { dragonflyStatusConfig } from './dragonfly-status'
 import { envoyStatusConfig } from './envoy-status'
@@ -263,6 +264,7 @@ export const CARD_CONFIGS: CardConfigRegistry = {
   backstage_status: backstageStatusConfig,
   contour_status: contourStatusConfig,
   containerd_status: containerdStatusConfig,
+  cortex_status: cortexStatusConfig,
   dapr_status: daprStatusConfig,
   dragonfly_status: dragonflyStatusConfig,
   envoy_status: envoyStatusConfig,
