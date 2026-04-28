@@ -229,8 +229,12 @@ test.describe('Tour/Onboarding', () => {
     test('adapts to mobile viewport', async ({ page }) => {
       await setupTourTest(page, true)
 
-      await page.goto('/')
+      // Set viewport BEFORE goto so the page lays out in mobile mode from
+      // the first render (avoids a desktop→mobile transition in webkit that
+      // temporarily sets visibility:hidden on the main content during the
+      // 300 ms CSS transition).
       await page.setViewportSize({ width: 375, height: 667 })
+      await page.goto('/')
 
       // Webkit may need additional time after viewport resize to re-layout
       // (#nightly-playwright).

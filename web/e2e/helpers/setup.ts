@@ -169,6 +169,18 @@ export async function mockApiFallback(page: Page) {
     })
   })
 
+  // Return valid active-users data so useActiveUsers stops re-rendering on every poll.
+  // The catch-all returns {} which produces data.activeUsers=undefined → Math.max(undefined)=NaN
+  // → NaN !== NaN is always true → dataChanged=true on every poll → constant re-renders → DOM
+  // detachment flakiness in webkit/firefox.
+  await page.route('**/api/active-users', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ activeUsers: 1, totalConnections: 1 }),
+    })
+  )
+
   await page.route('**/api/**', (route) =>
     route.fulfill({
       status: 200,
@@ -356,7 +368,7 @@ export async function setupAuthLocalStorage(
       localStorage.setItem('kc-onboarding-complete', 'true')
     }
     if (o.tourComplete) {
-      localStorage.setItem('kc-tour-complete', 'true')
+      localStorage.setItem('kubestellar-console-tour-completed', 'true')
     }
     if (o.setupComplete) {
       localStorage.setItem('kc-setup-complete', 'true')
@@ -366,8 +378,8 @@ export async function setupAuthLocalStorage(
 
 /** Default clusters returned from a mocked MCP `**\/api/mcp/**` call */
 export const DEFAULT_MCP_CLUSTERS = [
-  { name: 'cluster-1', context: 'ctx-1', healthy: true, nodeCount: 5, podCount: 45 },
-  { name: 'cluster-2', context: 'ctx-2', healthy: true, nodeCount: 3, podCount: 32 },
+  { name: 'cluster-1', healthy: true, nodeCount: 5, podCount: 45 },
+  { name: 'cluster-2', healthy: true, nodeCount: 3, podCount: 32 },
 ]
 
 /** Options for `setupMCP` — override cluster/issue/event/node payloads */

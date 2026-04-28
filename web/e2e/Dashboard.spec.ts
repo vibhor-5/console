@@ -372,7 +372,6 @@ test.describe('Dashboard Data Accuracy (#6459)', () => {
       { length: EXPECTED_CLUSTER_COUNT },
       (_, i) => ({
         name: `accuracy-cluster-${i + 1}`,
-        context: `ctx-${i + 1}`,
         healthy: true,
         reachable: true,
         nodeCount: 2,

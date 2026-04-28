@@ -291,6 +291,7 @@ async function fetchActiveUsers() {
     // before the outer try/catch processes the rejection (microtask timing issue).
     const data = await resp.json().catch(() => null) as ActiveUsersInfo | null
     if (!data) throw new Error('Invalid JSON response')
+    if (!Number.isFinite(data.activeUsers)) throw new Error('Invalid activeUsers value')
     consecutiveFailures = 0 // Reset on success
 
     // Smooth the count to handle Netlify Blobs eventual consistency fluctuations
@@ -351,7 +352,7 @@ export function useActiveUsers() {
   useEffect(() => {
     // On Netlify (no backend): use HTTP heartbeat for presence tracking
     // With backend: use WebSocket presence connection
-    if (isDemoModeForced) {
+    if (isDemoModeForced || getDemoMode()) {
       startHeartbeat()
     } else {
       startPresenceConnection()
