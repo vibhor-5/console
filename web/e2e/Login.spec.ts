@@ -116,6 +116,15 @@ test.describe('Login Page — frontend-only (mocked backend)', () => {
   })
 
   test('handles login errors gracefully', async ({ page }) => {
+    // Catch-all API mock prevents unmocked requests hanging in webkit/firefox
+    await page.route('**/api/**', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({}),
+      })
+    )
+
     // Mock GitHub auth endpoint failure
     await page.route('**/auth/github', (route) =>
       route.fulfill({
@@ -150,6 +159,15 @@ test.describe('Login Page — frontend-only (mocked backend)', () => {
   })
 
   test('detects demo mode vs OAuth mode behavior', async ({ page }) => {
+    // Catch-all API mock prevents unmocked requests hanging in webkit/firefox
+    await page.route('**/api/**', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({}),
+      })
+    )
+
     await page.goto('/')
 
     const loginPage = page.getByTestId('login-page')
