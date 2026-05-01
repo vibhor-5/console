@@ -419,7 +419,7 @@ export function DashboardPage({
                   onDragEnd={handleDragEnd}
                 >
                   <SortableContext items={cards.map(c => c.id)} strategy={rectSortingStrategy}>
-                    <div className="grid grid-cols-1 md:grid-cols-12 gap-2">
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-2" data-testid="dashboard-cards-grid">
                       {cards.map((card, index) => (
                         <SortableDashboardCard
                           key={card.id}

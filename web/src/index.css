@@ -478,6 +478,9 @@ layer(base);
 
 /* Enhanced scrollbar for panels, sidebars, and dropdowns —
    slim and subtle, only visible on hover/scroll */
+.scroll-enhanced {
+  scrollbar-gutter: stable;
+}
 .scroll-enhanced::-webkit-scrollbar {
   width: 6px;
 }
