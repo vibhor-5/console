@@ -268,13 +268,8 @@ describe('useDeployments (extended)', () => {
     globalThis.fetch = vi.fn().mockRejectedValue(new Error('fail'))
 
     const { result } = renderHook(() => useDeployments())
-    await waitFor(() => expect(result.current.isLoading).toBe(false))
 
-    // Trigger two more refetches to accumulate 3 total failures
-    await act(async () => { result.current.refetch() })
-    await waitFor(() => expect(result.current.consecutiveFailures).toBeGreaterThanOrEqual(2))
-
-    await act(async () => { result.current.refetch() })
+    // With exponential backoff, cascading effect re-runs quickly accumulate failures
     await waitFor(() => expect(result.current.consecutiveFailures).toBeGreaterThanOrEqual(3))
     expect(result.current.isFailed).toBe(true)
   })

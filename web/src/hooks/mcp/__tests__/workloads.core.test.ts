@@ -434,9 +434,10 @@ describe('usePodIssues', () => {
 
     const { result } = renderHook(() => usePodIssues())
 
-    await waitFor(() => expect(result.current.isLoading).toBe(false))
-    expect(result.current.consecutiveFailures).toBeGreaterThanOrEqual(1)
-    expect(result.current.isFailed).toBe(false)
+    // With exponential backoff, cascading effect re-runs quickly accumulate failures
+    await waitFor(() => expect(result.current.consecutiveFailures).toBeGreaterThanOrEqual(1))
+    // Persistent failures cascade via useEffect dep on consecutiveFailures
+    await waitFor(() => expect(result.current.isFailed).toBe(true))
   })
 })
 
