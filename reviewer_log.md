@@ -1,5 +1,47 @@
 # Reviewer Log
 
+## Pass 88 — 2026-05-01T09:01–09:25 UTC
+
+### Trigger
+KICK — CI=87%, nightly=RED, nightlyPlaywright=RED. 73 unaddressed Copilot comments (2 HIGH).
+
+### Pre-flight
+- Branch: `main`, HEAD `66505bf39` (synced upstream)
+- GA4: **NOMINAL, 0 anomalies** ✅
+- 0 merge-eligible PRs
+
+### RED Analysis
+
+**nightly-test-suite=RED** (run #25205585762 — started 06:49 UTC, finished 07:53 UTC):
+Root cause: `consistency-test` failed with 4 fetch() violations (`fetcherUtils.ts`, `GitHubActivity.tsx`, plus others). These were fixed by PR #11227 (merged 08:22 UTC) and PR #11232 (merged earlier). Nightly ran before the fixes landed. Triggered manual re-run (`gh workflow run nightly-test-suite.yml --ref main`, run #25209161349).
+
+**nightlyPlaywright=RED** (RED for 3 consecutive days — Apr 29, 30, May 1):
+Root cause: `Dashboard.spec.ts:497` cluster-count assertion using `\b3\b` word-boundary regex against text like "Clusters3total" where "3" has no word boundaries. Fixed by PR #11217 (merged 08:05 UTC). Nightly runs at 06:30 UTC — fix landed after each scheduled run. Triggered manual re-run (run #25209161348).
+
+Both fixes are now on `main`. Tomorrow's scheduled nightlies will be green.
+
+### HIGH Copilot Comment Fixes
+
+**#11192 — preflightCheck-coverage.test.ts:443** (HIGH, non-Playwright):
+Previous fix in pass 87 renamed to include "(context value not embedded in snippet)" but Copilot still flagged it as HIGH because the parenthetical implied the absence is a checked behavior, obscuring the real semantics (boolean switch on context presence).
+- Renamed test: removed confusing parenthetical
+- Added inline comment explaining boolean-switch semantics and contrast with `EXPIRED_CREDENTIALS`
+- PR #11235 opened
+
+**#11181 — mission-control-stress.spec.ts:435** (HIGH, Playwright): Scanner owns.
+
+### Actions Taken
+
+| Action | Detail |
+|--------|--------|
+| Manual workflow dispatch | `nightly-test-suite.yml` → run #25209161349 |
+| Manual workflow dispatch | `playwright-nightly.yml` → run #25209161348 |
+| PR #11235 | Clarify MISSING_CREDENTIALS remediation test name and intent |
+
+**Status:** Nightlies re-triggered; both RED causes already fixed on main. PR #11235 open for HIGH comment fix.
+
+---
+
 ## Pass 87 — 2026-05-01T07:41–07:55 UTC
 
 ### Trigger
