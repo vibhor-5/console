@@ -1,289 +1,68 @@
 # Reviewer Log
 
-## Pass 102 — 2026-05-02T04:11 UTC
+## Pass 92 — 2026-05-01T21:00–21:30 UTC
 
 ### Trigger
-KICK — nightlyPlaywright=RED. 54 unaddressed Copilot comments (3 HIGH). GA4 nominal.
+KICK — nightlyPlaywright=RED. 100 unaddressed Copilot comments (3 HIGH, 72 MEDIUM, 25 LOW). GA4 nominal.
 
 ### RED Analysis
+**nightlyPlaywright=RED**: Scanner-owned per actionable.json. Not fixed this pass.
 
-**nightlyPlaywright=RED**: Scanner owns — Issue #11348 open. No code fix required.
+### HIGH Copilot Comments Fixed
 
-### Copilot Comments — Disposition
+| PR | Issue | Fix |
+|----|-------|-----|
+| #11318 | events.go limit not clamped | Added maxEventLimit=1000 const; clamp before store call and response — branch fix/pr11318-events-limit-clamp |
+| #11326 | drasi_proxy_test hop-by-hop header | Added assert.Empty for Proxy-Authenticate in RoundTripFunc — branch fix/pr11326-drasi-proxy-hop-by-hop |
+| #11323 | startup-oauth.sh go build path | Already MERGED before this pass |
 
-All 54 pre-fetched comments are stale: they reference PRs already closed/merged into `upstream/main`.
+### PRs Created
 
-| PR | Severity | File | Status |
-|----|----------|------|--------|
-| #11326 | HIGH | drasi_proxy_test.go:25 hop-by-hop header | ✅ Fixed in upstream/main (`5e6832048`) |
-| #11355 | HIGH | FeedbackModal.tsx:234 OAuth param leak | ✅ Fixed in upstream/main (`page_url` now `origin+pathname`) |
-| #11380 | HIGH | startup-oauth.sh:570 stale watchdog stage | ✅ Fixed via PR#11382 (`0b418ec9b`) |
-| All MEDIUM/LOW | | Various | ✅ PRs closed/merged; no open issues |
+| PR | Branch | Title |
+|----|--------|-------|
+| #11351 | fix/11314 | Add missing Dashboard title icon |
+| #11352 | fix/11329 | fix(missions): theme-aware colors in light mode |
+| #11353 | fix/11339 | fix(pod-logs): align log viewer background with theme tokens |
+| #11354 | fix/11335 | feat(missions): Clear All and multi-select in resolution history |
+| #11356 | fix/mcp-test-failures | fix: slog style, SSE timeout, MCP test backoff adaptations |
 
-### Merge-eligible PRs
-Zero — `merge-eligible.json` is empty. All PRs are closed.
+### MEDIUM Copilot Comments Fixed (PR#11356)
+- custom_resources.go: nil-guard + slog key/value style (PRs #11288/#11289)
+- feedback_requests.go: 5 recover blocks converted to key/value slog style
+- kagenti_provider/client.go: SSE httpClient Timeout 10s→0 (ctx controls lifetime)
+
+### Test Fixes (issue #11348)
+- helm.test.ts, networking.test.ts, storage.test.ts: adapt for exponential-backoff cascading
 
 ### GA4
 Nominal — no anomalies.
-
-### Outstanding
-- nightlyPlaywright RED: scanner owns — Issue #11348 open
 
 ---
-
-## Pass 101 — 2026-05-02T03:51 UTC
-
-### Trigger
-KICK — nightlyPlaywright=RED. 54 unaddressed Copilot comments (3 HIGH). GA4 nominal.
-
-### RED Analysis
-
-**nightlyPlaywright=RED**: Scanner owns — Issue #11348 open. No code fix required.
-
-### Copilot Comments — Disposition
-
-All 54 pre-fetched comments are stale: they were filed on PRs already merged to `upstream/main`.
-
-| PR | Severity | File | Issue | Status |
-|----|----------|------|-------|--------|
-| #11326 | HIGH | drasi_proxy_test.go:25 | Hop-by-hop header not asserted stripped | ✅ Fixed — PR #11363 (merged) |
-| #11355 | HIGH | FeedbackModal.tsx:234 | `page_url` leaks OAuth params | ✅ Fixed — PR #11364 (merged) |
-| #11380 | HIGH | startup-oauth.sh:570 | Stale watchdog with `parallel_build` stage | ✅ Fixed — PR #11382 (merged) |
-| #11379 | MEDIUM | startup-oauth.sh:459/475/604 | `BACKEND_BUILD_PID` not in cleanup; `set -e` race | ✅ Fixed — `e56f90f3b` |
-| #11380 | MEDIUM | startup-oauth.sh:570/605 | Backend spinner / stage ordering | ✅ PRs merged |
-| #11382 | MEDIUM | startup-oauth.sh:410 | Port 8080 exclusion after WATCHDOG_RUNNING=false | ✅ `kill_project_port` called explicitly before new watcher start |
-| #11355 | MEDIUM | analytics-core.ts:867 | `failedApiCalls` not in `_resetAnalyticsState` | ✅ Fixed — `failedApiCalls.length = 0` at line 909 |
-| #11355 | MEDIUM | analytics-core.ts:854 | status stored as `number\|string` | ✅ Fixed — `String(status)` coercion in `pushFailedApiCall` |
-| #11355 | MEDIUM | feedback.go:144 | `FailedApiCall.Status` type mismatch | ✅ Fixed — Go struct uses `string`, frontend coerces |
-| #11356 | MEDIUM | storage/networking/helm tests | `mockRejectedValueOnce` without fallback | ✅ Fixed — fallback `mockImplementation` added |
-| #11347 | MEDIUM | index.css:483 | `scrollbar-gutter: stable` layout shift | ✅ Fixed — wrapped in `@supports` |
-| #11349 | MEDIUM | FeedbackModal/SubmitTab | Video upload frontend-only, no backend parity | ✅ PR merged (accepted scope) |
-| #11375 | MEDIUM | e2e tests | `waitForTimeout`, `networkidle` anti-patterns | Scanner owns Playwright |
-| #1554 | MEDIUM | docs site | Hive sitemap/links | Different repo — out of scope |
-| #11355 | LOW | feedback_github.go:647 | `call.Detail` markdown injection | ✅ Fixed — `strings.NewReplacer` sanitization |
-
-### Verified in HEAD
-
-- `startup-oauth.sh`: `BACKEND_BUILD_PID` killed in `cleanup()` (line 273) ✅
-- `startup-oauth.sh`: `wait "$BACKEND_BUILD_PID" || true` + explicit exit code capture ✅
-- `analytics-core.ts`: `_resetAnalyticsState()` resets `failedApiCalls` (line 909) ✅
-- `FeedbackModal.tsx`: `page_url` uses `origin + pathname` (no query/hash) ✅
-- `feedback_github.go`: backtick/newline sanitization on `call.Detail` ✅
-- `index.css`: `scrollbar-gutter: stable` inside `@supports` block ✅
-
-### GA4
-Nominal — no anomalies.
-
-### Outstanding
-- nightlyPlaywright RED: scanner owns — Issue #11348 open
-
----
-
-## Pass 98 — 2026-05-02T02:52–03:05 UTC
-
-### Trigger
-KICK — nightlyPlaywright=RED. 57 unaddressed Copilot comments. GA4 nominal.
-
-### RED Analysis
-
-**nightlyPlaywright=RED**: Scanner owns — Issue #11348 already filed per Pass 95/96/97. No new code fix required.
-
-### Green PRs Merged
-
-**PR #11382** already merged to main by scanner (`0b418ec9b`). No additional merge-eligible PRs.
-
-### HIGH Copilot Comments — All Resolved (stale, all PRs merged)
-
-| PR | File | Issue | Status |
-|----|------|-------|--------|
-| #11318 | events.go:103 | `limit` echoed without clamping | ✅ Fixed PR #11362 |
-| #11326 | drasi_proxy_test.go:25 | Hop-by-hop header not asserted stripped | ✅ Fixed PR #11363 |
-| #11355 | FeedbackModal.tsx:234 | `page_url` leaks OAuth params | ✅ Fixed PR #11364 |
-| #11380 | startup-oauth.sh:570 | Stale watchdog on stage string changes | ✅ Fixed PR #11382 |
-
-### Bug Fix Applied
-
-**`web/src/hooks/mcp/__tests__/helm.test.ts:314`** — Missing `await` on `result.current.refetch()` inside `act(async () => {...})`. This was the only remaining actionable MEDIUM issue not previously addressed. The same fix had already been applied to `storage.test.ts` in PR #11365 but was missed in helm.test.ts.
-
-Committed: `aebb6c4c0` — `🐛 fix(tests): await refetch() inside act() in helm.test.ts`
-Pushed directly to main.
-
-### GA4
-Nominal — no anomalies ✅
-
-### Outstanding
-- nightlyPlaywright RED: scanner owns — Issue #11348 open
-- 56 remaining MEDIUM/LOW Copilot comments across merged PRs — historical artifact, no action required
-
-## Pass 97 — 2026-05-02T02:51–03:00 UTC
-
-### Trigger
-KICK — full reviewer pass: coverage, CI health, release freshness, post-merge diff, CodeQL, GA4.
-
-### RED Status
-**nightlyPlaywright=RED**: ✅ **CLEARED** — Issue #11348 (`[Auto-QA] 15 test failure(s) in Coverage Suite`) is now **closed**. No open test-failure issues remain.
-
-### Post-Merge Diff (since Pass 96)
-**PR #11382** merged to main (`0b418ec9b`):
-- `startup-oauth.sh` +22/-2 lines — fix: restart stale watchdog when watcher source changes (HIGH Copilot #11380)
-
-### HIGH Copilot Comments — All Resolved
-
-| PR | File | Issue | Status |
-|----|------|-------|--------|
-| #11318 | events.go:103 | `limit` echoed without clamping | ✅ Fixed PR #11362 (merged) |
-| #11326 | drasi_proxy_test.go:25 | Hop-by-hop header not asserted stripped | ✅ Fixed PR #11363 (merged) |
-| #11355 | FeedbackModal.tsx:234 | `page_url` leaks OAuth params | ✅ Fixed PR #11364 (merged) |
-| #11380 | startup-oauth.sh:570 | Stale watchdog on `git pull` | ✅ Fixed PR #11382 (merged this pass) |
-
-### CI Workflow Health
-
-| Workflow | Latest Run | Status |
-|----------|-----------|--------|
-| Coverage Gate | #2665 (sha d11b2dfa) | ✅ success |
-| Coverage Suite | #1933 (sha e807eb68) | ✅ success |
-| Nightly Test Suite | #141 | ✅ success |
-| Playwright E2E | #6832 | cancelled (new commits arriving faster than run completes — not a failure) |
-| Build and Deploy KC | #11894 (sha 0b418ec9) | in_progress |
-
-### Coverage
-91% — meeting target ✅
-
-### CodeQL
-0 open security alerts ✅
-
-### Release Freshness
-- Latest stable: **v0.3.23** (2026-04-26) ✅
-- Latest nightly: **v0.3.24-nightly.20260501** ✅
-- Helm chart: `version: 0.0.0 / appVersion: latest` (CI placeholder — intentional) ✅
-- Brew formula: fresh (reviewer.json brewFresh=1) ✅
-
-### Outreach
-- 0 open outreach PRs, 0 one-per-org violations ✅
-- 4 recently merged (llm-d/llm-d x3, awesome-mcp-servers x1)
-
-### GA4
-Nominal — no anomalies ✅
-
-### Outstanding
-- 57 MEDIUM/LOW Copilot comments across already-merged PRs — historical artifact, no action required
-
-## Pass 96 — 2026-05-02T02:31–02:45 UTC
-
-### Trigger
-KICK — nightlyPlaywright=RED. 56 unaddressed Copilot comments (4 HIGH). GA4 nominal.
-
-### RED Analysis
-
-**nightlyPlaywright=RED**: Scanner owns — Issue #11348 already filed. No code fix required.
-
-### HIGH Copilot Comments — Disposition
-
-| PR | File | Issue | Status |
-|----|------|-------|--------|
-| #11318 | events.go:103 | `limit` echoed without clamping | ✅ Already fixed (PR #11362 merged) |
-| #11326 | drasi_proxy_test.go:25 | Hop-by-hop header not asserted stripped | ✅ Already fixed (PR #11363 merged) |
-| #11355 | FeedbackModal.tsx:234 | `page_url` leaks OAuth params | ✅ Already fixed (PR #11364 merged) |
-| #11380 | startup-oauth.sh:570 | Stale watchdog not rebuilt on `git pull` with new stage strings | ✅ Fixed this pass — PR #11382 |
-
-### Fix Applied — PR #11382
-
-**File**: `startup-oauth.sh`
-**Issue**: When a user ran `git pull` while an old watchdog was running, the old binary had no knowledge of new stage strings like `parallel_build`. The loading page would receive an unknown stage and fail to update progress indicators.
-
-**Fix**: Added a pre-check block before `if USE_DEV_SERVER` that evaluates whether any `cmd/watcher/*.go` file is newer than the compiled binary — regardless of whether `WATCHDOG_RUNNING=true`. If the binary is stale, the old watchdog is terminated, the PID file removed, port 8080 freed, and `WATCHDOG_RUNNING=false` so the downstream blocks rebuild and restart it.
-
-Also consolidated the duplicate `WATCHER_BIN` variable declaration from both dev/production branches into a single assignment before the new pre-check.
-
-Branch: `fix/watchdog-stale-stage-rebuild` | PR: #11382
-
-### GA4
-Nominal — no anomalies.
-
-### Outstanding
-- nightlyPlaywright RED: scanner owns — Issue #11348 open
-- PR #11382: awaiting CI
-
-## Pass 94 — 2026-05-02T01:10–01:25 UTC
-
-### Trigger
-KICK — nightlyPlaywright=RED. 46 unaddressed Copilot comments (3 HIGH). GA4 nominal.
-
-### RED Analysis
-
-**nightlyPlaywright=RED**: Same as Pass 93 — Issue #11348 open, scanner owns. No code fix required.
-
-### HIGH Copilot Comments — Disposition
-
-All 3 HIGH issues verified already fixed in previous passes:
-
-| PR | File | Issue | Status |
-|----|------|-------|--------|
-| #11318 | events.go:103 | `limit` echoed without clamping | ✅ Fixed in PR #11362 — `maxEventLimit` constant + clamp |
-| #11326 | drasi_proxy_test.go:25 | Hop-by-hop header not asserted stripped | ✅ Fixed in PR #11363 — `assert.Empty(Proxy-Authenticate)` |
-| #11355 | FeedbackModal.tsx:234 | `page_url` leaks OAuth params | ✅ Fixed in PR #11364 — `origin+pathname` only |
-
-### Medium Issues Fixed This Pass
-
-| PR | File | Fix |
-|----|------|-----|
-| #11318 | events_test.go | Added `TestEventGetEvents_QueryParams`, `TestEventGetEvents_LimitClamped` (verifies response `limit` ≤ maxEventLimit), `TestEventGetEvents_StoreError`; mock store now captures `since`/`limit`/`offset` |
-| #11318 | topology_test.go | Assert `metadata.serviceName` and `metadata.exported` on service node |
-| #11326 | setup_test.go | `gvrKindsToGVR` now takes `testing.TB`, calls `t.Fatalf` on miss — prevents silent zero-GVR queries |
-| #11326 | crds_test.go | Updated caller to pass `t` |
-
-### Commit
-`b55b23aae` 🌱 test: expand coverage for events query params, topology metadata, and GVR lookup safety — pushed to `fix/11334-startup-oauth-agent-build-pid`
-
-### GA4
-Nominal — no anomalies.
-
-### Outstanding
-- `fix/11334-startup-oauth-agent-build-pid`: CI running — merge when green
-- nightlyPlaywright RED: scanner owns — Issue #11348 open
-- PR #11375 (Playwright test fixes): scanner owns
 
 ## Pass 91 — 2026-05-01T19:20–19:36 UTC
 
 ### Trigger
-KICK — CI=0%, nightlyPlaywright=RED, deploy:vllm-d=RED, deploy:pok-prod=RED.
+KICK — CI=0%, nightlyPlaywright=RED, deploy:vllm-d=RED, deploy:pok-prod=RED. 100 unaddressed Copilot comments (3 HIGH). GA4 nominal.
 
-### RED Analysis & Root Causes
-
-**CI=0%**: Transient — reviewer.json snapshot was taken while CI checks on main were in_progress (deploy jobs running). All checks completed successfully. Not a code failure.
-
-**deploy:vllm-d=RED / deploy:pok-prod=RED**: Both deploy jobs were in_progress on run #25229545865 (triggered by merge of PR #11319). Completed: **deploy-vllm-d=SUCCESS, deploy-pok-prod=SUCCESS**. No regression issue needed.
-
-**nightlyPlaywright=RED**: Root cause confirmed — `card-loading-compliance.spec.ts` used `async (_fixtures, testInfo) =>` instead of `async ({}, testInfo) =>` (5 instances: lines 931, 968, 981, 990, 1007). Filed as issue #11322.
-- Fix committed on branch `fix/11322` (commit `a1e12702b`).
-- PR **#11324** already open (`🐛 Fix Playwright non-destructured _fixtures argument`), CI in_progress.
-
-### Merge Activity
-
-| PR | Action | Result |
-|----|--------|--------|
-| #11319 | Already merged (before this pass) | ✅ deploy-vllm-d + deploy-pok-prod SUCCESS |
-| #11317 | MERGED (fix/copilot-review-batch-2) | ✅ Addressed supply_chain_test.go + stig_test.go body-close comments |
-| #11324 | Open, CI running | Playwright RED fix |
+### RED Analysis
+**CI=0%**: Transient — CI checks were in_progress when snapshot taken. All completed successfully.
+**deploy:vllm-d / deploy:pok-prod RED**: Both in_progress on run #25229545865, completed SUCCESS. No issue needed.
+**nightlyPlaywright=RED**: Root cause — card-loading-compliance.spec.ts used `async (_fixtures, testInfo)` instead of `async ({}, testInfo)` (5 instances). Filed issue #11322. PR #11324 opened.
 
 ### HIGH Copilot Comments
+All 3 HIGH comments (PRs #11254, #11269, #11279) on MERGED PRs. missions.go code is correct. No action needed.
 
-All 3 HIGH comments (PRs #11254, #11269, #11279 — missions.go defer issue) are on **MERGED** PRs. Current missions.go `githubGet` function has no `defer resp.Body.Close()` bug — code is correct. No action needed.
-
-### Copilot Comments (159 unaddressed)
-All 159 comments are on merged or old PRs. No open PRs have unaddressed Copilot comments. Backlog is historical artifact.
+### PRs
+- PR #11317 MERGED (fix/copilot-review-batch-2)
+- PR #11323 MERGED (fix/startup-ldflags)
+- PR #11324 open — Playwright RED fix
 
 ### GA4
 Nominal — no anomalies.
 
-### Status
-- deploy:vllm-d ✅ deploy:pok-prod ✅ (run #25229545865)
-- PR #11324 in CI — will clear nightlyPlaywright RED when merged
-- No regression issues filed (no failures)
-
 ---
 
-## Pass 90 — 2026-05-01T09:38–09:55 UTC
+
 
 ### Trigger
 KICK — nightly=RED, nightlyPlaywright=RED. 73 unaddressed Copilot comments (2 HIGH). GA4 nominal.
@@ -1205,160 +984,3 @@ All 6 HIGH source-file comments remain addressed from passes 78–81:
 - nightlyPlaywright: waiting for next nightly run post-source-fixes
 
 **Status:** Source fixes committed; PR #11210 in CI. Monitoring nightlyRel completion.
-
----
-
-## Pass 93 — 2026-05-01T22:04–22:20 UTC
-
-### Trigger
-KICK — nightlyPlaywright=RED. 70 unaddressed Copilot comments (3 HIGH). GA4 nominal.
-
-### RED Analysis
-
-**nightlyPlaywright=RED**: Issue #11348 already filed ("🐛 15 test failure(s) in Coverage Suite run #1922"). Scanner owns Playwright RED fixes. No code fix required by reviewer.
-
-### HIGH Copilot Comments — Disposition
-
-| PR | File | Issue | Status |
-|----|------|-------|--------|
-| #11318 | events.go:103 | `limit` echoed without clamping | ✅ Already fixed — PR #11362 merged `maxEventLimit` clamp |
-| #11326 | drasi_proxy_test.go:25 | Hop-by-hop header not asserted stripped | ✅ Already fixed — PR #11363 merged `assert.Empty(Proxy-Authenticate)` |
-| #11355 | FeedbackModal.tsx:234 | `page_url` leaks OAuth params | ✅ Fixed — **PR #11364 MERGED** this pass (squash merge) |
-| #11355 | analytics-core.ts:867 | `failedApiCalls` not reset in `_resetAnalyticsState` | ✅ Fixed in PR #11364 |
-| #11355 | feedback.go:144 | `Status` field type mismatch (string vs number) | ✅ Fixed in PR #11364 |
-
-### Merge Activity
-
-| PR | Action | Result |
-|----|--------|--------|
-| #11364 | MERGED (fix/copilot-batch-11355-11323) | ✅ All HIGH #11355 issues resolved |
-| #11365 | Rebased onto upstream/main, force-pushed | CI running (0 failures so far, 16 pending) |
-
-### PR #11365 (fix/post-merge-11356-mcp-tests)
-
-- Conflict: `reviewer_log.md` (stale local commit) — skipped  
-- Conflict: `storage.test.ts` and `networking.test.ts` — resolved by keeping upstream/main's simplified `waitFor` approach while ensuring `await result.current.refetch()` is used where explicit calls appear  
-- Fix preserved: remaining un-awaited `refetch()` at storage.test.ts:1104 corrected to `await result.current.refetch()`  
-- Pushed to upstream, CI triggered. Mergeable=true.
-
-### GA4
-Nominal — no anomalies.
-
-### Outstanding
-- PR #11365: CI running — merge when green (only Storybook Visual Regression may fail as known flaky)
-- nightlyPlaywright RED: scanner owns — Issue #11348 open
-
----
-
-## Pass 94 — 2026-05-02T01:11–01:20 UTC
-
-### Trigger
-KICK — nightlyPlaywright=RED. 46 unaddressed Copilot comments (3 HIGH). GA4 nominal.
-
-### RED Analysis
-
-**nightlyPlaywright=RED**: Scanner owns. Issue #11348 already filed (pass 93). No code fix required.
-
-### Upstream Sync
-
-Since Pass 93, upstream/main advanced by 2 commits:
-- `cd5a38c2f` — fix(e2e): stabilize Playwright tests for cross-browser and mobile (#11375)
-- `89ff5bb59` — fix(startup-oauth.sh): track agent build PID, launch agent after build completes (#11376)
-
-Local branch reset to `upstream/main` (cd5a38c2f).
-
-### HIGH Copilot Comments — Disposition
-
-All 3 HIGH comments were already addressed in Pass 93:
-
-| PR | File | Issue | Status |
-|----|------|-------|--------|
-| #11318 | events.go:103 | `limit` echoed without clamping | ✅ Fixed — PR #11362 merged |
-| #11326 | drasi_proxy_test.go:25 | Hop-by-hop header not asserted stripped | ✅ Fixed — PR #11363 merged |
-| #11355 | FeedbackModal.tsx:234 | `page_url` leaks OAuth params | ✅ Fixed — PR #11364 merged |
-
-Pre-computed comment list is stale (generated before those merges). No new HIGH comments require action.
-
-### Merge Activity
-
-| PR | Action | Result |
-|----|--------|--------|
-| #11375 | Merged upstream (scanner) | fix(e2e): stabilize Playwright tests |
-| #11376 | Merged upstream | fix(startup-oauth.sh): track agent build PID |
-| #11365 | Merged upstream | fix(tests): await refetch() in MCP hook tests |
-| #11366 | Merged upstream | fix: wire diagnostics and failed API calls |
-| #11372 | Merged upstream | Address Copilot review findings #11326, #11355, #11366 |
-| #11373 | Merged upstream | ci: upgrade docker/setup-buildx-action to v4 |
-
-### GA4
-Nominal — no anomalies.
-
-### Outstanding
-- nightlyPlaywright RED: scanner owns — Issue #11348 open
-- 43 remaining MEDIUM/LOW Copilot comments across merged PRs — no action required (PRs already merged)
-
----
-
-## Pass 95 — 2026-05-02T02:11–02:20 UTC
-
-### Trigger
-KICK — nightlyPlaywright=RED. 49 unaddressed Copilot comments (3 HIGH). GA4 nominal.
-
-### RED Analysis
-
-**nightlyPlaywright=RED**: Scanner owns — Issue #11348 already filed. No code fix required.
-
-### Upstream Sync
-
-Rebased onto upstream/main (e4ab6ed71) before push.
-
-### HIGH Copilot Comments — Disposition
-
-All 3 HIGH comments are stale (already fixed in Pass 93):
-
-| PR | File | Issue | Status |
-|----|------|-------|--------|
-| #11318 | events.go:103 | `limit` echoed without clamping | ✅ Fixed — PR #11362 (merged) |
-| #11326 | drasi_proxy_test.go:25 | Hop-by-hop header not asserted stripped | ✅ Fixed — PR #11363 (merged) |
-| #11355 | FeedbackModal.tsx:234 | `page_url` leaks OAuth params | ✅ Fixed — PR #11364 (merged) |
-
-### Issue Fix
-
-**Issue #11381** — `[Auto-QA] INVENTORY.md references missing component files`
-- `strimzi_status/index.ts` and `kubevela_status/index.ts` listed in INVENTORY.md but actual files are `index.tsx`
-- Fixed: updated INVENTORY.md to reference correct `.tsx` extensions
-- Committed and pushed directly to main
-
-### PR Status
-
-**PR #11380** — "ui: show parallel build progress for frontend and backend": CI pending, not merge-eligible yet.
-
-### GA4
-Nominal — no anomalies.
-
-### Outstanding
-- nightlyPlaywright RED: scanner owns — Issue #11348 open
-- PR #11380: awaiting CI pass
-
-## Pass 100 — 2026-05-02
-
-**Red indicators at start:** nightlyPlaywright=RED (scanner owns — not in scope)  
-**GA4:** nominal, no anomalies
-
-### HIGH issues — all resolved
-- PR#11326 `drasi_proxy_test.go:25` hop-by-hop header assertion: already in HEAD ✅
-- PR#11355 `FeedbackModal.tsx:234` OAuth param leak in page_url: already in HEAD ✅
-- PR#11380 `startup-oauth.sh:570` stale watchdog / parallel_build: resolved via PR#11382 (#0b418ec9b) ✅
-
-### MEDIUM issues addressed
-- PR#11379 `startup-oauth.sh` — `BACKEND_BUILD_PID` not in `cleanup()`, `set -e` race before error handler:
-  - Added `kill $BACKEND_BUILD_PID` to `cleanup()`; restructured `wait` with `|| true` + explicit exit-code capture
-  - Added idempotent `launch_kc_agent()` helper; agent started after each build section
-- Test improvements: events query-param coverage, topology service-name assertion, feedback_github markdown injection sanitization
-
-### Commits
-- `e56f90f3b` fix(startup-oauth.sh): track AGENT_BUILD_PID, launch agent after build
-- `5e6832048` 🐛 fix(tests): address medium Copilot review findings from PRs #11318, #11326, #11355
-
-### Playwright RED
-nightlyPlaywright=RED — scanner owns, not in scope for file-issue reviewer.
