@@ -682,7 +682,7 @@ export const CardWrapper = memo(function CardWrapper({
             onMouseLeave={() => setShowSummary(false)}
           >
             {/* Header */}
-            <div data-tour="card-header" className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-3 border-b border-border/50">
+            <div data-tour="card-header" className="flex flex-wrap items-center justify-between gap-y-2 px-4 py-3 border-b border-border/50">
               <div className="flex items-center gap-2 min-w-0">
                 {dragHandle}
                 {ResolvedIcon && <ResolvedIcon className={cn('w-4 h-4 shrink-0', resolvedIconColor)} />}
@@ -726,13 +726,6 @@ export const CardWrapper = memo(function CardWrapper({
                 {!onRefresh && (isVisuallySpinning || effectiveIsLoading || forceSkeletonForOffline) && !effectiveIsFailed && (
                   <RefreshCw className="w-3 h-3 text-blue-400 animate-spin" aria-hidden="true" />
                 )}
-                {/* Separator between failure badge and timestamp to prevent text concatenation (#11402) */}
-                {effectiveIsFailed && (() => {
-                  const effectiveLastUpdated = lastUpdated ?? childDataState?.lastUpdated
-                  return effectiveLastUpdated && !isVisuallySpinning && !effectiveIsLoading
-                    ? <span className="text-2xs text-muted-foreground/50 select-none" aria-hidden="true">·</span>
-                    : null
-                })()}
                 {/* Last updated indicator — use prop or child-reported timestamp.
                   * Still rendered when refresh is failing (#9104): hiding the
                   * timestamp on failure removed the only signal about data age,
@@ -759,7 +752,7 @@ export const CardWrapper = memo(function CardWrapper({
                   )
                 })()}
               </div>
-              <div className="flex items-center gap-1.5 shrink-0" role="toolbar" aria-label={t('cardWrapper.cardActions', { defaultValue: 'Card actions' })}>
+              <div className="flex items-center gap-1.5 shrink-0" role="toolbar" aria-label={t('cardWrapper.cardControls', { title })}>
                 {/* Collapse/expand button */}
                 <button
                   onClick={() => setCollapsed(!isCollapsed)}
